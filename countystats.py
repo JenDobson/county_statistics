@@ -71,6 +71,6 @@ allcountiesdf['FIPS'] = allcountiesdf['FIPS'] + allcountiesdf['state_FIPS_prefix
 
 
 # Standardize Area on sq mi
-allcountiesdf['Area (sq mi)']=allcountiesdf['Area'].apply(lambda x: float(re.match('[\d\.]+',x)[0]))
+allcountiesdf['Area (sq mi)']=allcountiesdf['Area'].apply(lambda x: float(re.match('[,\d\.]+',x)[0].replace(',','')))
 
 allcountiesdf.to_csv('all_counties_stats.csv')
