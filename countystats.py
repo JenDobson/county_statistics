@@ -3,15 +3,13 @@ import math
 import numpy as np
 import re
 
-fips_url = 'https://en.wikipedia.org/wiki/List_of_United_States_FIPS_codes_by_county'
-
-fips_df = pd.read_html(fips_url)[1]
-fips_df['state_FIPS_prefix']=fips_df['FIPS'].apply(lambda x: math.floor(x/1000)*1000)
-fips_df['FIPS'] = fips_df['FIPS']-fips_df['state_FIPS_prefix']
-states = pd.unique(fips_df['State or equivalent'])
 
 DATACOLUMNS = ['FIPS', 'County or equivalent', 'State or equivalent','state_FIPS_prefix','Population', 'Area','Source','Timestamp']   
-    
+
+def standardize_state_name(state):
+    state = state.replace(' ','_')
+    state = re.sub('[^A-Za-z_]','',state)
+    return state
 
 def cleanup_state_data(state_df):
     state_df = state_df.rename(columns=lambda x: re.sub('\[\d+\]','',x))
@@ -29,8 +27,6 @@ def merge_state_data(state_df,fips_df):
     return merged_state_df[DATACOLUMNS]
     
 def get_wikipedia_data(state):
-    state = state.replace(' ','_')
-    state = re.sub('[^A-Za-z_]','',state)
     url = 'https://en.wikipedia.org/wiki/List_of_counties_in_{state}'.format(state=state)
     webpage_data = pd.read_html(url)
     
@@ -45,6 +41,15 @@ def get_wikipedia_data(state):
     state_data['Timestamp']=pd.Timestamp.now()
     return state_data
     
+ 
+fips_url = 'https://en.wikipedia.org/wiki/List_of_United_States_FIPS_codes_by_county'
+
+fips_df = pd.read_html(fips_url)[1]
+fips_df['state_FIPS_prefix']=fips_df['FIPS'].apply(lambda x: math.floor(x/1000)*1000)
+fips_df['FIPS'] = fips_df['FIPS']-fips_df['state_FIPS_prefix']
+fips_df['State or equivalent']=fips_df['State or equivalent'].apply(standardize_state_name)
+
+states = pd.unique(fips_df['State or equivalent'])
     
 
 allcountiesdf = pd.DataFrame()
